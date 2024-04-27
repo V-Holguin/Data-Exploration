@@ -2,6 +2,6 @@
 
 ### To download, open the documents then press 'Download raw file' at the top right
 
-### Non-interactive images are also available to view to see the dashboard
+### Non-interactive images are also available for view to see the dashboard
 
 ### The RMarkdown is included to just view the script
