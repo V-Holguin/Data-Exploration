@@ -1,0 +1,125 @@
+---
+title: "Amazon Books"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+# importing libraries
+library(flexdashboard)
+library(tidyverse)
+library(highcharter)
+library(gt)
+library(htmltools)
+library(viridis)
+```
+
+```{r}
+# importing data
+books <- read_csv('C:\\Users\\vince\\OneDrive\\Desktop\\Data\\Raw Data\\amazon_books.csv', show_col_types = FALSE)
+
+#Removing duplicates
+books <- books %>% 
+  distinct(Name, .keep_all = TRUE) %>% 
+  rename(User_Rating = 'User Rating')
+```
+
+Books
+=======================================================================
+
+Column {.tabset .tabset-fade data-width=650}
+-----------------------------------------------------------------------
+
+### Most Popular Authors
+
+```{r}
+# colors
+custom_colors <- viridis::mako(n = 15)
+
+# most popular authors by reviews
+books %>% 
+  group_by(Author) %>% 
+  summarise(Reviews = sum(Reviews)) %>% 
+  arrange(desc(Reviews)) %>% 
+  head(15) %>% 
+  hchart('column', hcaes(x = Author, y = Reviews, color = custom_colors)) %>% 
+  hc_add_theme(hc_theme_google()) %>% 
+  hc_tooltip(pointFormat = '<b>Number of Reviews: </b> {point.y} <br>') %>% 
+  hc_title(text = 'Most Popular Authors from 2009 to 2019',
+            style = list(fontSize = '25px', fontWeight = 'bold')) %>% 
+  hc_subtitle(text = 'By Number of Reviews',
+              style = list(fontSize = '16px')) %>% 
+  hc_credits(enabled = TRUE, text = 'Vincent Holguin')
+```
+
+### Most Popular Books
+
+```{r}
+# colors
+custom_colors <- viridis::plasma(n = 15)
+
+# most popular books by reviews
+books %>% 
+  arrange(desc(Reviews)) %>% 
+  head(15) %>% 
+  hchart('bar', hcaes(x = Name, y = Reviews, color = custom_colors)) %>% 
+  hc_add_theme(hc_theme_google()) %>% 
+  hc_tooltip(pointFormat = '<b>Number of Reviews: </b> {point.y} <br>') %>% 
+  hc_title(text = 'Most Popular Books from 2009 to 2019',
+            style = list(fontSize = '25px', fontWeight = 'bold')) %>% 
+  hc_subtitle(text = 'By Number of Reviews',
+              style = list(fontSize = '16px')) %>% 
+  hc_credits(enabled = TRUE, text = 'Vincent Holguin')
+```
+
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### {.no-padding}
+
+```{r}
+# colors
+custom_colors <- viridis::mako(n=2)
+
+# most common genre
+books %>% 
+  group_by(Genre) %>% 
+  summarise(count = n()) %>% 
+  hchart('pie', hcaes(x = Genre, y = count, color = custom_colors)) %>% 
+  hc_add_theme(hc_theme_google()) %>% 
+  hc_tooltip(pointFormat = '<b>Proportion: </b> {point.percentage:,.2f}%') %>% 
+  hc_title(text = 'Most Common Genre from 2009 to 2019',
+            style = list(fontSize = '15px', fontWeight = 'bold')) %>% 
+  hc_credits(enabled = TRUE, text = 'Vincent Holguin')
+
+  
+```
+
+### {.no-padding}
+
+```{r}
+# this is going to be a datatable
+df1 <- books %>% 
+  filter(User_Rating >= 4.9) %>% 
+  arrange(desc(Reviews)) %>% 
+  select(Name, Author)
+
+# HTML table
+div(style = 'height:600px; overflow-y:scroll', gt(df1) %>% 
+        tab_header(title = md('Best Books from 2009 to 2019'),
+                    subtitle = md('By Users Rating')) %>% 
+      opt_table_font(font = list(google_font('Chivo'), default_fonts())) %>% 
+      tab_style(location = cells_column_labels(column = everything()),
+                style = list(cell_borders(sides = 'bottom',
+                                          weight = px(2)),
+                             cell_text(weight = 'bold'))) %>% 
+      tab_options(table.font.size = px(12L),
+                  table.border.top.style = 'none',
+                  column_labels.border.bottom.width = 2,
+                  table_body.border.top.style = 'none',
+                  data_row.padding = px(3))
+)
+```
